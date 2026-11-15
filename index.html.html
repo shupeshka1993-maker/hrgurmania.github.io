@@ -1,0 +1,717 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HR & Staff — прототип P0</title>
+<style>
+  :root{
+    --bg:#f3f4f6; --card:#fff; --line:#e5e7eb; --text:#111827; --muted:#6b7280;
+    --accent:#2563eb; --ok:#16a34a; --warn:#d97706; --danger:#dc2626;
+    --sidebar:#111827;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+  button{font-family:inherit}
+  header.top{position:sticky;top:0;z-index:50;background:var(--sidebar);color:#fff;padding:10px 20px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  header.top .brand{font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px}
+  header.top .badge{background:#f59e0b;color:#111;font-weight:700;font-size:11px;padding:3px 8px;border-radius:999px}
+  header.top .tabs{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  header.top .tabs button{background:#374151;color:#fff;border:0;padding:7px 12px;border-radius:8px;cursor:pointer;font-size:13px}
+  header.top .tabs button.active{background:var(--accent)}
+  header.top .tabs button.ghost{background:transparent;border:1px solid #4b5563}
+  .layout{display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 56px)}
+  @media(max-width:820px){.layout{grid-template-columns:1fr}.sidebar{display:none!important}}
+  aside.sidebar{background:#fff;border-right:1px solid var(--line);padding:14px 10px;position:sticky;top:56px;align-self:start;height:calc(100vh - 56px);overflow-y:auto}
+  aside.sidebar .section{font-size:11px;text-transform:uppercase;color:var(--muted);letter-spacing:.06em;padding:10px 12px 6px;font-weight:600}
+  aside.sidebar button{display:flex;width:100%;gap:10px;align-items:center;background:transparent;border:0;padding:9px 12px;border-radius:8px;cursor:pointer;color:#374151;font-size:14px;text-align:left}
+  aside.sidebar button:hover{background:#f3f4f6}
+  aside.sidebar button.active{background:#e0e7ff;color:#1e40af;font-weight:600}
+  main.content{padding:20px;max-width:1280px}
+  .notice{background:#fef3c7;border:1px solid #fde68a;color:#78350f;padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:16px}
+  .grid{display:grid;gap:14px}
+  .cols-4{grid-template-columns:repeat(4,1fr)}
+  .cols-3{grid-template-columns:repeat(3,1fr)}
+  .cols-2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:1000px){.cols-4{grid-template-columns:repeat(2,1fr)}.cols-3{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:680px){.cols-4,.cols-3,.cols-2{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .card h3{margin:0 0 12px;font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;display:flex;justify-content:space-between;align-items:center}
+  .kpi{font-size:28px;font-weight:700;line-height:1.1}
+  .kpi small{display:block;font-size:12px;color:var(--muted);font-weight:500;margin-top:6px}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14px}
+  .row:last-child{border-bottom:0}
+  .pill{font-size:12px;padding:2px 9px;border-radius:999px;font-weight:600;white-space:nowrap}
+  .pill.ok{background:#dcfce7;color:#166534}
+  .pill.warn{background:#fef3c7;color:#92400e}
+  .pill.err{background:#fee2e2;color:#991b1b}
+  .pill.info{background:#dbeafe;color:#1e40af}
+  .pill.gray{background:#e5e7eb;color:#374151}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
+  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+  tr:hover td{background:#fafafa}
+  .btn{background:var(--accent);color:#fff;border:0;padding:9px 14px;border-radius:9px;cursor:pointer;font-size:14px;font-weight:500}
+  .btn:hover{filter:brightness(.95)}
+  .btn.sec{background:#e5e7eb;color:#111}
+  .btn.ok{background:var(--ok)}
+  .btn.danger{background:var(--danger)}
+  .btn.sm{padding:6px 10px;font-size:12px}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .muted{color:var(--muted);font-size:13px}
+  .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+  .cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .cal-header h2{margin:0;font-size:18px}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .cal-dow{font-size:11px;color:var(--muted);text-align:center;padding:4px 0;font-weight:600;text-transform:uppercase}
+  .cal-cell{background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px;min-height:78px;font-size:12px;display:flex;flex-direction:column;gap:3px}
+  .cal-cell.today{border-color:var(--accent);box-shadow:0 0 0 2px #dbeafe}
+  .cal-cell.other{opacity:.35}
+  .cal-cell .daynum{font-weight:700;font-size:12px;color:var(--muted)}
+  .cal-cell.today .daynum{color:var(--accent)}
+  .cal-chip{background:#e0e7ff;color:#1e40af;border-radius:6px;padding:2px 5px;font-size:11px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .phone-wrap{display:flex;justify-content:center;padding:10px}
+  .phone{width:390px;max-width:100%;background:#fff;border-radius:36px;border:10px solid #1f2937;padding:18px 16px 60px;min-height:680px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.15)}
+  .phone .statusbar{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:14px}
+  .phone h2{margin:0 0 12px;font-size:18px}
+  .shift-card{background:linear-gradient(135deg,#2563eb,#1e40af);color:#fff;border-radius:18px;padding:16px;margin-bottom:14px}
+  .shift-card .big{font-size:26px;font-weight:700;margin:6px 0}
+  .net{display:flex;align-items:center;justify-content:space-between;background:#f9fafb;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px;margin-bottom:14px}
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+  .actions .btn{padding:16px 10px;font-size:15px}
+  .actions .full{grid-column:1/-1}
+  .event{font-size:13px;padding:9px 0;border-bottom:1px dashed var(--line);display:flex;justify-content:space-between;gap:8px;align-items:center}
+  .event:last-child{border-bottom:0}
+  .phone-nav{position:absolute;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding:8px 0;border-radius:0 0 26px 26px}
+  .phone-nav button{background:transparent;border:0;padding:8px 4px;font-size:11px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
+  .phone-nav button .icon{font-size:18px}
+  .phone-nav button.active{color:var(--accent);font-weight:600}
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
+  .modal{background:#fff;border-radius:14px;padding:20px;max-width:500px;width:100%;max-height:90vh;overflow:auto}
+  .modal h2{margin:0 0 14px;font-size:18px}
+  .modal .field{margin-bottom:12px}
+  .modal .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:600;text-transform:uppercase}
+  .modal .field select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:14px;font-family:inherit}
+  .modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+  .toast{position:fixed;bottom:24px;right:24px;background:#111827;color:#fff;padding:12px 16px;border-radius:10px;font-size:14px;z-index:200;box-shadow:0 10px 30px rgba(0,0,0,.2);opacity:0;transform:translateY(10px);transition:all .2s}
+  .toast.show{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">HR &amp; Staff <span class="badge">P0 · ДЕМО</span></div>
+  <div class="tabs">
+    <button data-role="owner">Владелец</button>
+    <button data-role="manager">Управляющий</button>
+    <button data-role="employee">Сотрудник</button>
+    <button class="ghost" onclick="resetDemo()">Сбросить</button>
+  </div>
+</header>
+<div class="layout" id="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="content" id="content"></main>
+</div>
+<div id="modalRoot"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'hr_proto_p0_v2';
+const uid = p => p+'_'+Math.random().toString(36).slice(2,9);
+const nowISO = () => new Date().toISOString();
+const pad2 = n => String(n).padStart(2,'0');
+const ymd = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+const todayYMD = () => ymd(new Date());
+const fmtT = iso => new Date(iso).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+const fmtDT = iso => new Date(iso).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+const monthLabel = (y,m) => new Date(y,m,1).toLocaleDateString('ru-RU',{month:'long',year:'numeric'});
+function dateLabel(dateStr){
+  const t = new Date(); t.setHours(0,0,0,0);
+  const d = new Date(dateStr+'T00:00:00');
+  const diff = Math.round((d - t)/86400000);
+  if(diff===0) return 'Сегодня';
+  if(diff===1) return 'Завтра';
+  if(diff===-1) return 'Вчера';
+  return d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'});
+}
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>el.classList.remove('show'), 2600);
+}
+
+function generateSchedule(){
+  const now = new Date(); const y = now.getFullYear(), m = now.getMonth();
+  const dim = new Date(y, m+1, 0).getDate();
+  const templates = [
+    {emp:'e1', br:'b1', start:'09:00', end:'18:00', brk:60},
+    {emp:'e2', br:'b1', start:'08:00', end:'17:00', brk:60},
+    {emp:'e3', br:'b2', start:'12:00', end:'21:00', brk:60},
+    {emp:'e4', br:'b1', start:'10:00', end:'19:00', brk:60},
+  ];
+  const out = [];
+  for(let d=1; d<=dim; d++){
+    const date = `${y}-${pad2(m+1)}-${pad2(d)}`;
+    const dow = new Date(y,m,d).getDay();
+    templates.forEach((s,i)=>{
+      if((d+i) % 4 === 0) return;
+      if(dow === 0 && i%2===0) return;
+      out.push({id:`sch_${date}_${s.emp}`, date, employeeId:s.emp, branchId:s.br,
+                start:s.start, end:s.end, breakMin:s.brk, status:'published'});
+    });
+  }
+  return out;
+}
+
+function demo(){
+  return {
+    role:'owner', screen:'dashboard', gatewayOnline:true,
+    iiko: {status:'ok', lastSync:null, pending:0, simulateError:false,
+      log:[{t:'—', msg:'Ожидание первой синхронизации', level:'info'}]},
+    branches:[
+      {id:'b1', name:'Тверская', tz:'Europe/Moscow', gatewayId:'gw_001', gatewayOnline:true},
+      {id:'b2', name:'Арбат',    tz:'Europe/Moscow', gatewayId:'gw_002', gatewayOnline:true},
+    ],
+    employees:[
+      {id:'e1', name:'Иван Петров',     position:'Официант',   branchId:'b1', status:'active', joined:'2024-03-12', phone:'+7 916 000-00-01', rate:400},
+      {id:'e2', name:'Мария Сидорова',  position:'Повар',       branchId:'b1', status:'active', joined:'2023-08-01', phone:'+7 916 000-00-02', rate:520},
+      {id:'e3', name:'Алексей Смирнов', position:'Бармен',      branchId:'b2', status:'active', joined:'2024-01-15', phone:'+7 916 000-00-03', rate:450},
+      {id:'e4', name:'Ольга Кузнецова', position:'Управляющий', branchId:'b1', status:'active', joined:'2022-05-10', phone:'+7 916 000-00-04', rate:700},
+    ],
+    schedule: generateSchedule(),
+    sessions: [], events: [],
+    corrections:[
+      {id:'c1', employeeId:'e1', branchId:'b1', date: todayYMD(),
+       from:'09:14', to:'09:00', reason:'Опоздал из-за пробок, прошу скорректировать',
+       status:'pending', author:'Управляющий Тверская', createdAt: nowISO()},
+    ],
+    timesheet:{month:new Date().toLocaleDateString('ru-RU',{month:'long',year:'numeric'}), status:'draft'},
+  };
+}
+
+let state = load();
+function load(){
+  try{ const raw = localStorage.getItem(STORAGE_KEY); if(raw) return JSON.parse(raw); }catch(e){}
+  return demo();
+}
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+const empById = id => state.employees.find(e=>e.id===id);
+const branchById = id => state.branches.find(b=>b.id===id);
+const MY_EMP = 'e1';
+const MY_BRANCH = 'b1';
+
+function setRole(r){ state.role = r; state.screen = defaultScreen(r); save(); render(); }
+function defaultScreen(r){ return r==='owner'?'dashboard': r==='manager'?'dashboard':'home'; }
+function goto(screen){ state.screen = screen; save(); render(); }
+function resetDemo(){ state = demo(); save(); render(); toast('Демо сброшено'); }
+function toggleGateway(){ state.gatewayOnline = !state.gatewayOnline; save(); render(); toast(state.gatewayOnline ? 'Gateway доступен' : 'Gateway недоступен'); }
+function toggleIikoError(){ state.iiko.simulateError = !state.iiko.simulateError; save(); render(); toast(state.iiko.simulateError ? 'iiko: режим ошибки' : 'iiko: режим успеха'); }
+
+function iikoSync(){
+  const entry = {t: new Date().toLocaleTimeString('ru-RU'), level:'info', msg:''};
+  if(state.iiko.simulateError){
+    state.iiko.status='error'; state.iiko.pending++;
+    entry.level='error'; entry.msg='Синхронизация не удалась, задание в очереди';
+    toast('iiko: ошибка, задание в очереди');
+  } else {
+    state.iiko.status='ok'; state.iiko.pending=0; state.iiko.lastSync = nowISO();
+    entry.msg='Синхронизация успешна';
+    toast('iiko: синхронизировано');
+  }
+  state.iiko.log.unshift(entry);
+  if(state.iiko.log.length > 30) state.iiko.log.pop();
+  save(); render();
+}
+
+function startShift(){
+  if(state.sessions.some(s=>s.employeeId===MY_EMP && !s.end)) return;
+  const ev = {id:uid('ev'),type:'CLOCK_IN',employeeId:MY_EMP,branchId:MY_BRANCH,
+              time:nowISO(),status:'pending',proof:null,note:'Проверка сети и подписи…'};
+  state.events.unshift(ev); save(); render();
+  setTimeout(()=>{
+    if(!state.gatewayOnline){
+      ev.status='review'; ev.note='Gateway недоступен — требуется ручное подтверждение';
+      save(); render(); toast('Событие отправлено на проверку'); return;
+    }
+    ev.status='confirmed'; ev.proof='proof_'+uid(); ev.note='Подпись Gateway проверена';
+    state.sessions.unshift({id:uid('s'),employeeId:MY_EMP,branchId:MY_BRANCH,
+                            start:nowISO(),end:null,breaks:[],status:'open'});
+    save(); render(); toast('Смена начата');
+  }, 900);
+}
+
+function endShift(){
+  const s = state.sessions.find(x=>x.employeeId===MY_EMP && !x.end);
+  if(!s) return;
+  const openBreak = s.breaks.find(b=>!b.end);
+  if(openBreak){
+    if(!confirm('Есть открытый перерыв. Завершить смену вместе с перерывом?')) return;
+    openBreak.end = nowISO();
+  }
+  s.end = nowISO(); s.status='closed';
+  state.events.unshift({id:uid('ev'),type:'CLOCK_OUT',employeeId:MY_EMP,branchId:MY_BRANCH,
+                        time:nowISO(),status:'confirmed',proof:'proof_'+uid(),
+                        note:'Подпись Gateway проверена'});
+  save(); render(); toast('Смена завершена');
+}
+
+function toggleBreak(){
+  const s = state.sessions.find(x=>x.employeeId===MY_EMP && !x.end);
+  if(!s) return;
+  const open = s.breaks.find(b=>!b.end);
+  if(open){
+    open.end = nowISO();
+    state.events.unshift({id:uid('ev'),type:'BREAK_END',employeeId:MY_EMP,branchId:MY_BRANCH,
+                          time:nowISO(),status:'confirmed',note:''});
+    toast('Перерыв завершён');
+  } else {
+    s.breaks.push({start:nowISO(),end:null});
+    state.events.unshift({id:uid('ev'),type:'BREAK_START',employeeId:MY_EMP,branchId:MY_BRANCH,
+                          time:nowISO(),status:'confirmed',note:''});
+    toast('Перерыв начат');
+  }
+  save(); render();
+}
+
+function decideCorrection(id, decision){
+  const c = state.corrections.find(x=>x.id===id);
+  if(!c) return;
+  c.status = decision; c.decidedAt = nowISO();
+  save(); render();
+  toast(decision==='approved' ? 'Корректировка утверждена' : 'Корректировка отклонена');
+}
+function changeEmployeeStatus(id, status){
+  const e = empById(id); if(!e) return;
+  e.status = status; save(); render();
+  toast(`Статус изменён: ${statusLabel(status)}`);
+}
+function timesheetSet(status){
+  state.timesheet.status = status; save(); render();
+  toast('Табель: '+timesheetLabel(status));
+}
+
+function statusPill(status){
+  const map = {
+    confirmed:['ok','подтверждено'], pending:['info','ожидает'], review:['warn','требует проверки'],
+    rejected:['err','отклонено'], draft:['gray','черновик'], submitted:['info','на согласовании'],
+    approved:['ok','утверждён'], locked:['err','заблокирован'],
+  };
+  const [cls,label] = map[status] || ['gray', status];
+  return `<span class="pill ${cls}">${label}</span>`;
+}
+function statusLabel(s){ return {active:'активен',paused:'приостановлен',fired:'уволен',new:'новый'}[s] || s; }
+function timesheetLabel(s){ return {draft:'черновик',submitted:'на согласовании',approved:'утверждён',locked:'заблокирован',reopened:'переоткрыт'}[s] || s; }
+function eventLabel(t){ return {CLOCK_IN:'Начало смены',CLOCK_OUT:'Окончание смены',BREAK_START:'Начало перерыва',BREAK_END:'Конец перерыва'}[t] || t; }
+
+const NAV = {
+  owner:[
+    {sec:'Обзор'}, {id:'dashboard', icon:'🏠', label:'Дашборд'},
+    {id:'branches', icon:'🏬', label:'Филиалы'}, {id:'employees', icon:'👥', label:'Сотрудники'},
+    {id:'calendar', icon:'📅', label:'Календарь'},
+    {sec:'Финансы'}, {id:'payroll', icon:'💰', label:'Начисления (preview)'},
+    {sec:'Инфраструктура'}, {id:'integrations', icon:'🔌', label:'Интеграции'},
+  ],
+  manager:[
+    {sec:'Мой филиал'}, {id:'dashboard', icon:'🏠', label:'Дашборд'},
+    {id:'calendar', icon:'📅', label:'График'}, {id:'employees', icon:'👥', label:'Сотрудники'},
+    {sec:'Учёт'}, {id:'corrections', icon:'✏️', label:'Корректировки'},
+    {id:'timesheet', icon:'📊', label:'Табель'},
+    {sec:'Инфраструктура'}, {id:'gateway', icon:'📶', label:'Gateway'},
+  ],
+  employee:[
+    {id:'home', icon:'🏠', label:'Главная'}, {id:'history', icon:'🕘', label:'История'},
+    {id:'requests', icon:'✏️', label:'Заявки'}, {id:'profile', icon:'👤', label:'Профиль'},
+  ],
+};
+
+function render(){
+  document.querySelectorAll('.tabs [data-role]').forEach(b=>{
+    b.classList.toggle('active', b.dataset.role === state.role);
+  });
+  const layout = document.getElementById('layout');
+  const sidebar = document.getElementById('sidebar');
+  const content = document.getElementById('content');
+  if(state.role === 'employee'){
+    sidebar.innerHTML = ''; sidebar.style.display='none';
+    layout.style.gridTemplateColumns = '1fr';
+    content.innerHTML = renderEmployeeScreen();
+  } else {
+    sidebar.style.display='';
+    layout.style.gridTemplateColumns = '';
+    sidebar.innerHTML = renderSidebar();
+    content.innerHTML = renderMain();
+  }
+  document.getElementById('modalRoot').innerHTML = renderModal();
+}
+
+function renderSidebar(){
+  const items = NAV[state.role] || [];
+  return items.map(it=>{
+    if(it.sec) return `<div class="section">${it.sec}</div>`;
+    const active = state.screen === it.id ? 'active' : '';
+    return `<button class="${active}" onclick="goto('${it.id}')">
+      <span style="width:18px;text-align:center">${it.icon}</span><span>${it.label}</span></button>`;
+  }).join('');
+}
+
+function renderMain(){
+  const s = state.screen;
+  if(state.role==='owner'){
+    if(s==='dashboard') return viewOwnerDashboard();
+    if(s==='branches') return viewBranches();
+    if(s==='employees') return viewEmployeesList(true);
+    if(s==='calendar') return viewCalendar();
+    if(s==='payroll') return viewPayroll();
+    if(s==='integrations') return viewIntegrations();
+  }
+  if(state.role==='manager'){
+    if(s==='dashboard') return viewManagerDashboard();
+    if(s==='calendar') return viewCalendar();
+    if(s==='employees') return viewEmployeesList(false);
+    if(s==='corrections') return viewCorrections();
+    if(s==='timesheet') return viewTimesheet();
+    if(s==='gateway') return viewGateway();
+  }
+  return '<div class="card">Экран не найден</div>';
+}
+
+function viewOwnerDashboard(){
+  const onShift = state.sessions.filter(s=>!s.end);
+  const pending = state.corrections.filter(c=>c.status==='pending');
+  const iikoPill = state.iiko.status==='ok' ? `<span class="pill ok">подключено</span>` : `<span class="pill err">ошибка</span>`;
+  const shiftRows = onShift.length ? onShift.map(s=>{
+    const e = empById(s.employeeId);
+    return `<div class="row"><span><b>${e.name}</b> · ${e.position}</span>
+      <span class="muted">${branchById(s.branchId).name} · с ${fmtT(s.start)}</span></div>`;
+  }).join('') : `<div class="muted">Сейчас никого нет на смене</div>`;
+  const pendingRows = pending.length ? pending.map(c=>{
+    const e = empById(c.employeeId);
+    return `<div class="row"><span><b>${e.name}</b> · ${c.from} → ${c.to}</span>
+      <span class="muted">${c.reason}</span></div>`;
+  }).join('') : `<div class="muted">Нет заявок</div>`;
+  return `
+  <div class="notice">Демо-режим. Роли, Wi-Fi/Gateway, iiko и начисления имитируются. Не для реального учёта.</div>
+  <div class="grid cols-4" style="margin-bottom:16px">
+    <div class="card"><div class="kpi">${state.employees.length}<small>сотрудников</small></div></div>
+    <div class="card"><div class="kpi">${onShift.length}<small>на смене</small></div></div>
+    <div class="card"><div class="kpi">${pending.length}<small>заявок на согласование</small></div></div>
+    <div class="card"><div class="kpi">${state.branches.length}<small>филиалов</small></div></div>
+  </div>
+  <div class="grid cols-2">
+    <div class="card"><h3>Кто на смене</h3>${shiftRows}</div>
+    <div class="card"><h3>Заявки на согласование</h3>${pendingRows}</div>
+    <div class="card"><h3>Отклонения</h3>
+      ${state.sessions.filter(s=>!s.end).length
+        ? `<div class="row"><span>Открытые смены</span><span>${statusPill('review')}</span></div>`
+        : `<div class="muted">Отклонений нет</div>`}</div>
+    <div class="card"><h3>Интеграции</h3>
+      <div class="row"><span>iiko</span>${iikoPill}</div>
+      <div class="row"><span>Последняя синхронизация</span><span class="muted">${state.iiko.lastSync ? fmtDT(state.iiko.lastSync) : '—'}</span></div>
+      <div class="row"><span>В очереди</span><span>${state.iiko.pending}</span></div></div>
+  </div>`;
+}
+
+function viewBranches(){
+  const rows = state.branches.map(b=>{
+    const staff = state.employees.filter(e=>e.branchId===b.id).length;
+    const onShift = state.sessions.filter(s=>s.branchId===b.id && !s.end).length;
+    return `<tr><td><b>${b.name}</b><br><span class="muted">${b.tz}</span></td>
+      <td>${staff}</td><td>${onShift}</td>
+      <td>${b.gatewayOnline ? `<span class="pill ok">online</span>` : `<span class="pill err">offline</span>`}<br><span class="muted mono">${b.gatewayId}</span></td></tr>`;
+  }).join('');
+  return `<div class="notice">Демо. Управление филиалами — в P1.</div>
+  <div class="card"><h3>Филиалы сети</h3>
+    <table><thead><tr><th>Филиал</th><th>Сотрудников</th><th>На смене</th><th>Gateway</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
+}
+
+function viewEmployeesList(ownerMode){
+  const list = ownerMode ? state.employees : state.employees.filter(e=>e.branchId===MY_BRANCH);
+  const rows = list.map(e=>`<tr>
+    <td><b>${e.name}</b><br><span class="muted">${e.phone}</span></td>
+    <td>${e.position}</td><td>${branchById(e.branchId).name}</td>
+    <td>${statusPill(e.status==='active'?'confirmed':e.status==='paused'?'review':'rejected')}<br><span class="muted">${statusLabel(e.status)}</span></td>
+    <td><button class="btn sec sm" onclick="openEmployeeCard('${e.id}')">Карточка</button></td></tr>`).join('');
+  return `<div class="notice">Демо. Карточка сотрудника открывается как модальное окно. Редактирование — в P1.</div>
+  <div class="card"><h3>Сотрудники ${ownerMode?'сети':branchById(MY_BRANCH).name}</h3>
+    <table><thead><tr><th>Сотрудник</th><th>Должность</th><th>Филиал</th><th>Статус</th><th></th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
+}
+
+function viewCalendar(){
+  const now = new Date();
+  return renderMonth(now.getFullYear(), now.getMonth());
+}
+
+function renderMonth(y, m){
+  const first = new Date(y,m,1);
+  const firstDow = (first.getDay()+6)%7;
+  const dim = new Date(y,m+1,0).getDate();
+  const todayStr = todayYMD();
+  const cells = [];
+  for(let i=0;i<firstDow;i++) cells.push(null);
+  for(let d=1;d<=dim;d++) cells.push(d);
+  while(cells.length % 7 !== 0) cells.push(null);
+  const scopeBranch = state.role==='manager' ? MY_BRANCH : null;
+  const visible = state.schedule.filter(s=>!scopeBranch || s.branchId===scopeBranch);
+  const dows = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+  let html = `<div class="cal-header"><h2>${monthLabel(y,m)}</h2><span class="muted">Все смены опубликованы · демо</span></div>`;
+  html += `<div class="cal-grid">`;
+  dows.forEach(d=> html += `<div class="cal-dow">${d}</div>`);
+  cells.forEach(d=>{
+    if(!d){ html += `<div class="cal-cell other"></div>`; return; }
+    const dateStr = `${y}-${pad2(m+1)}-${pad2(d)}`;
+    const shifts = visible.filter(s=>s.date===dateStr);
+    const isToday = dateStr===todayStr;
+    const chips = shifts.slice(0,2).map(s=>{
+      const e = empById(s.employeeId);
+      const initials = e.name.split(' ').map(x=>x[0]).join('');
+      return `<div class="cal-chip" title="${e.name} · ${s.start}–${s.end}">${initials} ${s.start}–${s.end}</div>`;
+    }).join('');
+    const more = shifts.length > 2 ? `<div class="muted" style="font-size:10px">ещё ${shifts.length-2}</div>` : '';
+    html += `<div class="cal-cell ${isToday?'today':''}"><div class="daynum">${d}</div>${chips}${more}</div>`;
+  });
+  html += `</div>`;
+  html += `<div class="notice" style="margin-top:16px">Демо-календарь. Создание/редактирование смен — в P1 (MVP).</div>`;
+  return html;
+}
+
+function viewPayroll(){
+  const rows = state.employees.map(e=>`<tr>
+    <td><b>${e.name}</b><br><span class="muted">${e.position}</span></td>
+    <td>${e.rate} ₽/ч</td><td>—</td><td class="muted">preview</td></tr>`).join('');
+  return `<div class="notice">P2 · Превью. Реальные расчёты и выплаты — за рамками P0/P1. Валюта условная.</div>
+  <div class="card"><h3>Начисления · ${state.timesheet.month}</h3>
+    <table><thead><tr><th>Сотрудник</th><th>Ставка</th><th>Отработано</th><th>Начислено</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>
+  <div class="card" style="margin-top:14px"><h3>Формула (из ТЗ)</h3>
+    <div class="mono">База = Σ(оплачиваемые секунды сегмента / 3600 × ставка)<br>Итог = База + Премии + Доплаты</div>
+    <p class="muted" style="margin-top:10px">Округление, валюты, ставки и премии — согласуются перед P2.</p></div>`;
+}
+
+function viewIntegrations(){
+  const iiko = state.iiko;
+  const statusPillCls = iiko.status==='ok'?'ok':iiko.status==='error'?'err':'warn';
+  const logRows = iiko.log.map(l=>`<tr>
+    <td>${l.t}</td><td><span class="pill ${l.level==='error'?'err':l.level==='warn'?'warn':'gray'}">${l.level}</span></td>
+    <td>${l.msg}</td></tr>`).join('');
+  return `<div class="notice">Демо iiko. Реальные методы не подтверждены (см. раздел 12 ТЗ). Интеграция имитируется.</div>
+  <div class="grid cols-2">
+    <div class="card"><h3>iiko</h3>
+      <div class="row"><span>Статус</span><span class="pill ${statusPillCls}">${iiko.status}</span></div>
+      <div class="row"><span>Последняя синхронизация</span><span class="muted">${iiko.lastSync?fmtDT(iiko.lastSync):'—'}</span></div>
+      <div class="row"><span>В очереди</span><span>${iiko.pending}</span></div>
+      <div class="row"><span>Режим</span><span>${iiko.simulateError?'ошибка':'успех'}</span></div>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn sec" onclick="toggleIikoError()">${iiko.simulateError?'Имитировать успех':'Имитировать ошибку'}</button>
+        <button class="btn" onclick="iikoSync()">Синхронизировать</button></div></div>
+    <div class="card"><h3>Журнал</h3>
+      <table><thead><tr><th>Время</th><th>Уровень</th><th>Сообщение</th></tr></thead>
+      <tbody>${logRows}</tbody></table></div>
+  </div>`;
+}
+
+function viewManagerDashboard(){
+  const staff = state.employees.filter(e=>e.branchId===MY_BRANCH);
+  const onShift = state.sessions.filter(s=>s.branchId===MY_BRANCH && !s.end);
+  const pending = state.corrections.filter(c=>c.branchId===MY_BRANCH && c.status==='pending');
+  const today = state.schedule.filter(s=>s.branchId===MY_BRANCH && s.date===todayYMD());
+  const shiftRows = onShift.length ? onShift.map(s=>{
+    const e = empById(s.employeeId);
+    return `<div class="row"><span><b>${e.name}</b> · ${e.position}</span><span class="muted">с ${fmtT(s.start)}</span></div>`;
+  }).join('') : `<div class="muted">Никто не на смене</div>`;
+  return `<div class="notice">Демо. Филиал: <b>${branchById(MY_BRANCH).name}</b>. Wi-Fi/Gateway и роли имитируются.</div>
+  <div class="grid cols-4" style="margin-bottom:16px">
+    <div class="card"><div class="kpi">${staff.length}<small>сотрудников</small></div></div>
+    <div class="card"><div class="kpi">${onShift.length}<small>на смене</small></div></div>
+    <div class="card"><div class="kpi">${today.length}<small>смен по графику</small></div></div>
+    <div class="card"><div class="kpi">${pending.length}<small>заявок</small></div></div></div>
+  <div class="grid cols-2">
+    <div class="card"><h3>На смене сейчас</h3>${shiftRows}</div>
+    <div class="card"><h3>Табель · ${state.timesheet.month}</h3>
+      <div class="row"><span>Статус</span>${statusPill(state.timesheet.status)}</div>
+      <div style="margin-top:12px"><button class="btn" onclick="goto('timesheet')">Открыть табель</button></div></div>
+  </div>`;
+}
+
+function viewCorrections(){
+  const list = state.corrections.filter(c=>c.branchId===MY_BRANCH);
+  const rows = list.length ? list.map(c=>{
+    const e = empById(c.employeeId);
+    const actions = c.status==='pending'
+      ? `<button class="btn ok sm" onclick="decideCorrection('${c.id}','approved')">Утвердить</button>
+         <button class="btn danger sm" onclick="decideCorrection('${c.id}','rejected')">Отклонить</button>`
+      : statusPill(c.status);
+    return `<tr><td><b>${e.name}</b><br><span class="muted">${e.position}</span></td>
+      <td>${dateLabel(c.date)}<br><span class="muted">${c.from} → ${c.to}</span></td>
+      <td>${c.reason}</td><td>${actions}</td></tr>`;
+  }).join('') : `<tr><td colspan="4" class="muted">Заявок нет</td></tr>`;
+  return `<div class="notice">Демо. Заявки на корректировку. Автор не утверждает свою заявку (см. ТЗ 5).</div>
+  <div class="card"><h3>Заявки на корректировку</h3>
+    <table><thead><tr><th>Сотрудник</th><th>Изменение</th><th>Причина</th><th>Действие</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
+}
+
+function viewTimesheet(){
+  const staff = state.employees.filter(e=>e.branchId===MY_BRANCH);
+  const rows = staff.map(e=>{
+    const my = state.schedule.filter(s=>s.employeeId===e.id);
+    const planHours = my.reduce((sum,s)=>{
+      const [sh,sm] = s.start.split(':').map(Number);
+      const [eh,em] = s.end.split(':').map(Number);
+      return sum + ((eh*60+em) - (sh*60+sm) - s.breakMin)/60;
+    },0);
+    const sessions = state.sessions.filter(s=>s.employeeId===e.id && s.end);
+    const factHours = sessions.reduce((sum,s)=>{
+      const ms = new Date(s.end) - new Date(s.start);
+      const brk = s.breaks.reduce((b,x)=> b + (x.end? (new Date(x.end)-new Date(x.start)):0), 0);
+      return sum + (ms-brk)/3600000;
+    },0);
+    const diff = factHours - planHours;
+    return `<tr><td><b>${e.name}</b></td><td>${planHours.toFixed(1)}</td>
+      <td>${factHours.toFixed(1)}</td><td>${diff>=0?'+':''}${diff.toFixed(1)}</td>
+      <td>${statusPill('draft')}</td></tr>`;
+  }).join('');
+  const ts = state.timesheet;
+  return `<div class="notice">Демо-табель. Реальные расчёты и удержания — в P1/P2.</div>
+  <div class="card"><h3>Табель · ${ts.month}</h3>
+    <div class="row"><span>Статус</span>${statusPill(ts.status)}</div>
+    <table style="margin-top:12px"><thead><tr><th>Сотрудник</th><th>План, ч</th><th>Факт, ч</th><th>Откл., ч</th><th>Позиция</th></tr></thead>
+    <tbody>${rows}</tbody></table>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+      <button class="btn sec" ${ts.status!=='draft'?'disabled':''} onclick="timesheetSet('submitted')">На согласование</button>
+      <button class="btn ok" ${ts.status!=='submitted'?'disabled':''} onclick="timesheetSet('approved')">Утвердить</button>
+      <button class="btn danger" ${ts.status!=='approved'?'disabled':''} onclick="timesheetSet('locked')">Заблокировать</button>
+      <button class="btn sec" ${ts.status!=='locked'?'disabled':''} onclick="timesheetSet('reopened')">Переоткрыть</button>
+    </div></div>`;
+}
+
+function viewGateway(){
+  const rows = state.branches.map(b=>`<tr>
+    <td><b>${b.name}</b><br><span class="muted mono">${b.gatewayId}</span></td>
+    <td>${b.gatewayOnline ? `<span class="pill ok">online</span>` : `<span class="pill err">offline</span>`}</td>
+    <td>${b.tz}</td><td>${state.sessions.filter(s=>s.branchId===b.id && !s.end).length}</td></tr>`).join('');
+  return `<div class="notice">Демо. Статус Gateway переключается в приложении сотрудника. Реальная сетевая проверка — в P1 после эксперимента.</div>
+  <div class="grid cols-2">
+    <div class="card"><h3>Gateway филиалов</h3>
+      <table><thead><tr><th>Устройство</th><th>Статус</th><th>ТЧ</th><th>На смене</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+    <div class="card"><h3>Проверка сети (демо)</h3>
+      <div class="row"><span>Доступ к Gateway</span><span>${state.gatewayOnline?`<span class="pill ok">да</span>`:`<span class="pill err">нет</span>`}</span></div>
+      <div class="row"><span>Подпись события</span><span class="muted">проверяется сервером</span></div>
+      <div class="row"><span>SSID / MAC</span><span class="muted">не используется как доказательство</span></div>
+      <div style="margin-top:12px"><button class="btn sec" onclick="toggleGateway()">${state.gatewayOnline?'Симулировать сбой':'Восстановить'}</button></div></div>
+  </div>`;
+}
+
+function renderEmployeeScreen(){
+  const s = state.screen;
+  let body;
+  if(s==='home') body = empHome();
+  else if(s==='history') body = empHistory();
+  else if(s==='requests') body = empRequests();
+  else if(s==='profile') body = empProfile();
+  else body = empHome();
+  return `<div class="phone-wrap"><div class="phone">${body}${empBottomNav()}</div></div>`;
+}
+
+function empHome(){
+  const e = empById(MY_EMP);
+  const today = todayYMD();
+  const todayShift = state.schedule.find(s=>s.employeeId===MY_EMP && s.date===today);
+  const nextShift = state.schedule.find(s=>s.employeeId===MY_EMP && s.date>=today);
+  const open = state.sessions.find(s=>s.employeeId===MY_EMP && !s.end);
+  const openBreak = open && open.breaks.find(b=>!b.end);
+  const shiftCard = open
+    ? `<div class="shift-card"><div style="opacity:.8;font-size:13px">Смена открыта</div>
+         <div class="big">${fmtT(open.start)} → …</div>
+         <div style="opacity:.85;font-size:13px">${branchById(open.branchId).name} · ${openBreak?'перерыв':'работа'}</div></div>`
+    : `<div class="shift-card"><div style="opacity:.8;font-size:13px">${nextShift ? dateLabel(nextShift.date) : 'Ближайшая смена'}</div>
+         <div class="big">${nextShift ? nextShift.start+'–'+nextShift.end : '—'}</div>
+         <div style="opacity:.85;font-size:13px">${nextShift ? branchById(nextShift.branchId).name : 'нет смены'}</div></div>`;
+  const netPill = state.gatewayOnline ? `<span class="pill ok">Gateway доступен</span>` : `<span class="pill err">Gateway недоступен</span>`;
+  return `<div class="statusbar"><span>${e.name}</span><span>${branchById(MY_BRANCH).tz}</span></div>
+    ${shiftCard}
+    <div class="net"><span>Сеть филиала: ${netPill}</span>
+      <button class="btn sec" style="padding:6px 10px;font-size:12px" onclick="toggleGateway()">${state.gatewayOnline?'Сбой':'Восст.'}</button></div>
+    <div class="actions">
+      ${open ? `<button class="btn danger full" onclick="endShift()">Завершить смену</button>`
+             : `<button class="btn ok full" onclick="startShift()">Начать смену</button>`}
+      <button class="btn sec full" ${!open?'disabled':''} onclick="toggleBreak()">${openBreak?'Завершить перерыв':'Начать перерыв'}</button></div>
+    <div class="card" style="padding:12px;margin-bottom:12px"><h3 style="font-size:12px;margin:0 0 6px">Сегодня</h3>
+      ${todayShift ? `<div class="muted">План: ${todayShift.start}–${todayShift.end} · перерыв ${todayShift.breakMin} мин</div>`
+                   : `<div class="muted">Смены по графику нет</div>`}</div>`;
+}
+
+function empHistory(){
+  const evs = state.events.filter(x=>x.employeeId===MY_EMP);
+  const rows = evs.length ? evs.map(x=>`<div class="event">
+    <span>${fmtDT(x.time)}<br><span class="muted">${eventLabel(x.type)}${x.note?' · '+x.note:''}</span></span>
+    ${statusPill(x.status)}</div>`).join('') : `<div class="muted">Событий пока нет</div>`;
+  return `<div class="statusbar"><span>История</span><span></span></div>
+    <h2>История событий</h2><div class="card" style="padding:12px">${rows}</div>`;
+}
+
+function empRequests(){
+  const list = state.corrections.filter(c=>c.employeeId===MY_EMP);
+  const rows = list.length ? list.map(c=>`<div class="event">
+    <span>${dateLabel(c.date)}<br><span class="muted">${c.from} → ${c.to} · ${c.reason}</span></span>
+    ${statusPill(c.status)}</div>`).join('') : `<div class="muted">Заявок нет</div>`;
+  return `<div class="statusbar"><span>Мои заявки</span><span></span></div>
+    <h2>Заявки на корректировку</h2><div class="card" style="padding:12px">${rows}</div>
+    <div class="notice" style="margin-top:12px">Подача заявок из приложения — в P1.</div>`;
+}
+
+function empProfile(){
+  const e = empById(MY_EMP);
+  return `<div class="statusbar"><span>Профиль</span><span></span></div><h2>${e.name}</h2>
+    <div class="card" style="padding:14px">
+      <div class="row"><span class="muted">Должность</span><span>${e.position}</span></div>
+      <div class="row"><span class="muted">Филиал</span><span>${branchById(e.branchId).name}</span></div>
+      <div class="row"><span class="muted">Телефон</span><span>${e.phone}</span></div>
+      <div class="row"><span class="muted">Дата приёма</span><span>${e.joined}</span></div>
+      <div class="row"><span class="muted">Статус</span><span>${statusLabel(e.status)}</span></div></div>
+    <div class="notice" style="margin-top:12px">Биометрия не используется. Фото необязательно.</div>`;
+}
+
+function empBottomNav(){
+  return `<div class="phone-nav">${NAV.employee.map(it=>`<button class="${state.screen===it.id?'active':''}" onclick="goto('${it.id}')"><span class="icon">${it.icon}</span>${it.label}</button>`).join('')}</div>`;
+}
+
+function openEmployeeCard(id){ state._modal = {type:'employee', id}; save(); render(); }
+function closeModal(){ state._modal = null; save(); render(); }
+function renderModal(){
+  const m = state._modal;
+  if(!m) return '';
+  if(m.type==='employee') return renderEmployeeModal(m.id);
+  return '';
+}
+function renderEmployeeModal(id){
+  const e = empById(id); if(!e) return '';
+  return `<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal">
+    <h2>${e.name}</h2>
+    <div class="row"><span class="muted">Должность</span><span>${e.position}</span></div>
+    <div class="row"><span class="muted">Филиал</span><span>${branchById(e.branchId).name}</span></div>
+    <div class="row"><span class="muted">Телефон</span><span>${e.phone}</span></div>
+    <div class="row"><span class="muted">Дата приёма</span><span>${e.joined}</span></div>
+    <div class="row"><span class="muted">Ставка</span><span>${e.rate} ₽/ч</span></div>
+    <div class="row"><span class="muted">Статус</span>${statusPill(e.status==='active'?'confirmed':e.status==='paused'?'review':'rejected')}</div>
+    <div class="field" style="margin-top:14px"><label>Изменить статус занятости</label>
+      <select onchange="changeEmployeeStatus('${e.id}', this.value)">
+        <option value="active" ${e.status==='active'?'selected':''}>активен</option>
+        <option value="paused" ${e.status==='paused'?'selected':''}>приостановлен</option>
+        <option value="fired" ${e.status==='fired'?'selected':''}>уволен</option>
+      </select></div>
+    <div class="muted" style="margin-top:8px">В демо изменение статуса не отзывает устройства — в P1 реализуется на сервере.</div>
+    <div class="actions"><button class="btn sec" onclick="closeModal()">Закрыть</button></div>
+  </div></div>`;
+}
+
+document.querySelectorAll('.tabs [data-role]').forEach(b=>{
+  b.addEventListener('click', ()=>setRole(b.dataset.role));
+});
+render();
+</script>
+</body>
+</html>
